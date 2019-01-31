@@ -1,0 +1,414 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper, total={6in, 10in}]{geometry}
+
+\usepackage[style=numeric,backend=biber]{biblatex}
+\addbibresource{quellen.bib}
+\usepackage{graphicx}
+%\graphicspath{{.}}
+\usepackage{listings}
+\usepackage[onehalfspacing]{setspace}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage{subcaption}
+%\usepackage[T1]{fontenc}
+%\usepackage{amsmath}
+%\usepackage{amsfonts}
+\usepackage{amssymb}
+\author{Livio D'Agostini}
+\title{Programmieren von Spiele-KI mit neuronalen Netzen}
+\date{\today}
+
+\begin{document}
+
+
+\begin{titlepage}
+\centering
+\vspace{3cm}
+\huge{Programmieren von Spiele-KI mit neuronalen Netzen\par}
+\vspace{5cm}
+\begin{figure}[!htb]
+\begin{subfigure}{0.3\textwidth}
+\includegraphics[width=\linewidth]{cover1}
+\end{subfigure}\hfill
+\begin{subfigure}{0.3\textwidth}
+\includegraphics[width=\linewidth]{cover2}
+\end{subfigure}\hfill
+\begin{subfigure}{0.3\textwidth}
+\includegraphics[width=\linewidth]{cover3}
+\end{subfigure}
+\end{figure}
+
+
+
+
+\vfill
+\large{
+Livio D'Agostini\par
+Maturaarbeit\par
+Betreuung: Joachim Kambor\par
+Kantonsschule Zug\par
+2019\par
+\tiny{Titelbilder: \cite{cover1}\cite{cover3}}}
+
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Einleitung}
+In den letzten fünf bis zehn Jahren hat sich in einem Unterbereich der Informatik, dem der künstlichen Intelligenz, viel verändert. Der heute erreichte Forschungsstand ermöglicht Resultate, die erste Anwendungen in der Industrie haben, zum Beispiel in der Bilderkennung, der Musik- und Spracherkennung oder dem autonomen Fahren. \cite{topdlapp}\\
+An dieser Stelle muss erwähnt werden, dass sich nicht das ganze Gebiet names KI weiterentwickelt hat, sondern in der Tat nur ein kleiner Teil namens \textit{machine learning} und in diesem wiederum nur der Teil des \textit{deep learning}. Deep learning, zu welchem die mathematischen Grundlagen im nächsten Kapitel beschrieben werden, ist der Grund hinter der ganzen medialen wie wissenschaftlichen Aufregung, die sich seit 2012 eingestellt hat.\cite{dlrwiki}\\
+Es sollte deshalb nicht verwundern, dass man sich für dieses Thema interessieren kann und die Maturaarbeit deshalb im Bereich des deep learning schreiben will.
+Meine Zielsetzung war es, eine kleine auf deep learning basierende KI schreiben, die ein einfaches Spiel spielen kann. Für Letzteres bot sich Tic-Tac-Toe an (welches in meiner Arbeit und meinem Code immer wieder als TTT abgekürzt wird).
+Wie sich während der Arbeitsphase bald zeigte, reichen die Methoden des deep learning noch nicht aus, um eine Spiele-KI zu machen, es wird zusätzlich noch reinforcement learning bzw. deep reinforcement learning benötigt. Beide Bereiche verfügen über eine solche immense Breite von verschiedenen Methoden, so dass eine vollständige Behandlung der Themen unmöglich war. In der Tat wird in dieser Arbeit im Bereich des deep learning wie reinforcement learning jeweils nur auf die einfacheren Methoden eingegangen. Es zeigt sich jedoch, dass diese für ein Spiel wie TTT ausreichen.\\
+Informationen zum Thema habe ich zum grössten Teil im Internet gefunden. Es ist allerdings auch ein Buch zu nennen: \textit{Neuronale Netze selbst programmieren} von Tariq Rashid \cite{pinkbook} hatte ich gelesen, bevor ich mich zu dieser Arbeit entschloss. Es konnte mich überzeugen, dass deep learning keine Hexerei darstellt und dass eine Arbeit in diesem Bereich durchaus machbar ist.
+
+\newpage
+\section{Theorie Teil 1: Künstliche Neuronale Netze}
+Künstliche neuronale Netze sind ein zentraler Bestandteil dieser Arbeit. Es ist deshalb unerlässlich, sich mit ihnen genauer auseinanderzusetzen. In diesem Kapitel werden die grundlegenden Konzepte hinter diesen Netzen erklärt, allerdings reichen diese noch nicht aus, um eine Spiele-KI zu programmieren, was erst im zweiten Teil der Theorie gezeigt wird.
+\subsection{Ziel des \textit{machine learning}  im Allgemeinen}
+Heutzutage gibt es viele Bereiche in der Wissenschaft, wo der Computer zur Anwendung kommt: Als Simulationswerkzeug in der Physik, der Biologie, der Chemie oder der Geologie, als Sammler, Speicherer und Auswerter von Datenmengen in der Statistik und in den Sozialwissenschaften. Auffallend ist, dass die Programmierer dabei immer bis ins Detail wissen, was genau sie implementieren müssen: Der Physiker zum Beispiel kennt die Formeln, die seine Simulation benötigt, in und auswendig.\\
+In unserer Welt exisieren aber auch Problemstellungen, zu welchen selbst den schlauesten Köpfen keinen Algorithmus und keine Formel einfällt. Einer der Klassiker ist: Der Computer soll sich ein Bild ansehen und es einer Klasse wie Katze, Flugzeug oder Fussgängerstreifen zuordnen.\\
+Genau diese interessanten Probleme will das machine learning lösen: Solche, bei denen die Menschheit die Lösung noch nicht kennt.\\
+Neuronale Netze muss man, gleich wie Algorithmen, als mathematische Funktion auffassen. Das bedeutet, dass sie ein Etwas in ein anderes Etwas überführen, zum Beispiel ein x in ein y nach der Regel einer Funktion: 
+	$$y = f(x) |  z.B.: f(x) = x^2$$
+$x$ ist so etwas wie ein Input, $y$ gleicht analog einem Output.
+Dieses $f$ ist das, was wir suchen. Es ist der Zusammenhang zwischen Input und Output. Nach obiger Problemstellung:
+	$$Bildklasse = unbekannteFunktion( Bildchen )$$
+Wie gesagt soll das unbekannte $f$ gefunden werden. Machine learning löst dieses Problem mit folgendem Ablauf:
+\begin{enumerate}
+\item{Wir suchen eine allgemeine Funktion (das \textit{neural network}), und setzen es für die Funktion ein, die wir nicht kennen, obwohl die beiden Funktionen noch Nichts miteinander zu tun haben. Das neurale Netz enthält anpassbare Parameter, die es uns ermöglichen, jede beliebige Funktion zu modellieren.}
+\item{Mit einem grossem Satz von Datensets gehen wir nun ans Werk: Jeder Schritt besteht aus einem Input zum Netz, wobei die Funktion ausgerechnet wird. Anschliessend vergleicht man die Ausgabe mit einer Musterlösung, um zu erkennen, wie richtig das Netz momentan ist. Mithilfe von einer Fehlerfunktion und des Backpropagation-Algorithmus lassen sich die Parameter des Netzes ein wenig verändern, so dass diese in jedem Fall einen Schritt in die richtige Richtung tun.
+Wenn das Netz mit immer mehr Beispielen angepasst wird, dann wird es sich immer genauer an die unbekannte Funktion annähern. Schlussendlich hoffen wir, dass der Unterschied zwischen der unbekannten Funktion und unseres networks, unserer Approximation, so klein wie möglich wird: In diesem Fall IST das Neuronale Netz gleich der unbekannten Funktion, und so haben wir diese gefunden!}
+\item{Nun kann man das trainierte Netz für Anwendungzwecke nutzen.}
+\end{enumerate}
+ 
+Im Folgenden werden die einzelnen Schritte genauer beschrieben.
+\newpage
+\subsection{Ein Netz definieren}
+Es gibt zwei Punkte, die eine beliebige Funktion erfüllen muss, so dass sie sich für machine learning eignet:
+\begin{itemize}
+\item{Sie muss so viele verschiedene Funktionen annähern können, wie nur irgendwie möglich ist. Deshalb muss sie anpassbare Parameter enthalten, durch welche sie sich verändern kann.}
+\item{Es muss klar sein, wie die oben genannten Parameter angepasst werden können. Die einzige Informationquelle, auf welche eine Update-Regel zurückgreifen darf, sind die Daten, mit denen das Netz trainiert wird; Das sind viele Paare der Art (Input, korrekter Output).}
+\end{itemize}
+
+Neuronale Netze jeglicher Ausprägung erfüllen diese Punkte. Um das Vorgehen im \textit{machine learning} zu erklären, wird hier nur das sogennante MLP/dense-layer/fully-connected-neural network beschrieben. Es ist das am wenigsten Komplizierte der Netze. Es ist im Wesentlichen aus miteinander verbundenen Perzeptronen aufgebaut; Dabei handelt es sich um eine Abstrahierung der echten biologischen Neuronen\cite{perceptron}.\\
+Ein künstliches Neuron, auch Perzeptron genannt, sieht folgendermassen aus:
+\begin{figure}[hbt]
+\centering
+\includegraphics[scale=0.4]{figurepercept}
+\caption{ Ein Perzeptron\cite{figurepercept}}
+\end{figure}
+
+Ein Perzeptron darf beliebig viele Inputs haben, das heisst beliebig viele Signale dürfen eintreffen. 
+Alle Inputs sind gewichtet: Jeder Input-Wert wird mit einem Gewicht-Wert multipliziert. Das Gewicht ist ein Wert in $\mathbb{R}$. Diese Massnahme simuliert die Signalstärke des sendenden Neurons. Gleichzeitig erzeugt dies die Möglichkeit, dass ein Signal dämpfend/inhibitorisch wirken kann.
+Alle gewichteten Inputs werden zusammengezählt und bilden damit das Signal. Dieses wird an eine Aktivierungsfunktion weitergegeben. Diese simuliert, nach dem Vorbild eines echten Neurons, die Entscheidung, ob das Perzeptron das Signal weitergibt oder nicht. Die Ausgabe dieser wird zum Output des Perzeptrons. Die Aktivierungsfunktion ist aber nur selten eine Stufenfunktion, so wie sie nach dem biologischen Vorbild sein sollte.
+Nun kann man mehrere dieser Perzeptrons hintereinander oder nebeneinander stellen. In den meisten Fällen sind die Perzeptronen schichtenhaft angeordnet, wobei alle Perzeptronen der vorherigen mit denen der nachfolgenden Schicht verbunden sind. Die erste Schicht nimmt den Input des Netzes an, die Letzte repräsentiert die Ausgabe. Dadurch entstehen MLPs (multilayer-perceptrons), wie in Abbildung \ref{fig:MLP} dargestellt.
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{figuremlp}
+\caption{ Ein MLP\cite{figuremlp}}
+\label{fig:MLP}
+\end{figure}
+Natürlich steht es jedem offen, sein Netzwerk von Perzeptronen (innerhalb von Netzen meistens \textit{Knoten} genannt, wenn überhaupt) auf beliebig komplizierte Art zu modellieren, jedoch ist es fraglich, wie viel besser ein spezielles Netz sein würde verglichen mit einem Normalen, welches einem Schichtenaufbau folgt.
+Zwischen den Schichten liegen die Gewichte, je eines für jede Verbindung. 
+Als Aktivierungsfunktionen wurden historisch Sigmoid- und Tangens(hyperbolicus)funktionen verwendet\cite{video6}, welche eine Art S-Form haben. Der heutige Standard heisst ReLU und ist wie folgt definiert:
+	$$ReLU(x) = max(0,x)$$
+D.h., alle negativen Werte werden auf null gesetzt, alle andern bleiben gleich. Weshalb ReLU so gut funktioniert, ist nicht vollständig geklärt, jedoch hat sich ReLU in der Praxis durchgesetzt. Intuitiv darf man sich vorstellen, dass bestimmte Knoten im MLP einen ganz bestimmten Sinn relativ zum ganzen Netz besitzen, z.B. ein Netz, dass Bilder zuordenen soll, muss evtl. an einer Stelle entscheiden können, ob ein bestimmtes Merkmal im Input vorhanden ist. ReLU, so stellt man sich vor, hilft, Werte, die zu einem bestimmten Merkmal korrespondieren, auf null zu setzen, wenn das Merkmal in einem bestimmten Bild nicht vorhanden ist\cite{reluexpl}.
+Ein weiterer Vorteil des Schichtenaufbaus liegt darin, dass alle Gewichte in eine Matrix geschieben werden können. Zum Beispiel liegen alle Gewichte, die für Verbindungen zum ersten Knoten zuständig sind, in der ersten Zeile der Matrix. Hat man jetzt einen Vektor von Inputs, so lassen sich die Inputs für Knoten der zweiten Schicht mit einer Matrixmultiplikation berechnen: 
+		$$in2 = dotp( [weights], in1)$$
+Dank dieser Formel ist erkennbar, dass Neuronale Netze nicht unbedingt als Netze oder als Systeme von Verbindungen gesehen werden müssen. Eigentlich wird ein Vektor weitergegeben, der auf dem Weg wiederholt mit einer Matrix von Gewichten multipliziert und elementweise einer Aktivierungsfunktione übergeben wird. Die Anfangs beschriebenen Perzeptronen sind nicht mehr sichtbar.\\
+Die Architektur eines Netzes definiert den \textit{forward pass}. Damit ist das Berechnen der Ausgabe abhängig einer Eingabe gemeint. Im Fall vom obigen MLP:
+	$$forward\_pass(in0) = ReLU(dotp( [weights1],ReLU( dotp( [weights0],in0 ) ) ))$$
+Auf den ersten Input in0 wird nach Konvention meistens keine Aktivierungsfunktion angewendet\cite{pinkbook}.
+Die Gewichte sind entscheidend: Sie sind die anpassbaren Parameter. Der totale Zustand der Gewichte entscheidet über das Verhalten des Netzes. In der Theorie ist bewiesen, dass ein MLP von genügender Grösse und richtig gewählten Gewichten jede erdenkliche (kontinuierliche) Funktion annähern kann\cite{universalproof}.
+Natürlich weiss man nicht, was die korrekten Wahlen für die Gewichte sind. Um trotzdem Gewichte sinnvoll setzen zu können, hat man Backpropagation (im Deutschen als Fehlerrückführung bekannt) erfunden.
+Benötigt werden viele Datenpaare mit der Form:
+	$$( Input, verlangter Output)$$
+Zuerst wird das NN initalisiert, das heisst alle Gewichte erhalten einen zufälligen Wert. Nun werden die Gewichte schrittweise verbessert, in jedem Schritt durchläuft man die folgende Prozedur: Man nimmt ein Datenpaar und macht einen forward pass mit dem Input. Das erzeugt eine Ausgabe, die insbesondere zu Beginn des Trainings weit vom verlangten Output liegt. Als nächstes benötigt man eine Methode, die uns sagt, wie falsch die Ausgabe verglichen mit dem  Verlangten ist und abgeleitet davon wie unrichtig das NN ist. Die Funktion, die dies tut, heisst Fehlerfunktion oder \textit{loss function}. Meistens benutzt man den L1 oder den L2 loss\cite{video2}:
+$$L1( out, verlangt ) = sum( out - verlangt )$$
+$$L2( out,verlangt ) = sum( ( out - verlangt )^2 )$$
+Das sum() wird nur benötigt, um den loss als eine Zahl darzustellen. Für Backpropagation wird der intakte loss-Vektor benötigt. Bis jetzt kann man eine Aussage darüber machen, wie falsch das NN insgesamt ist, man interessiert sich aber nur für Aussagen über jedes einzelne Gewicht.
+Im Folgenden wird versucht, die Backpropagation verständlich zu erklären. Einiges Wissen stammt dabei von Brilliant.org\cite{backprop}.
+
+\subsection{Fehlerrückführung - Backpropagation}
+Verfügt man über ein Neuronales Netz $nn$, ein Trainingsbeispiel $t = (x,y)$ und eine loss-Funktion $E$, dann kann man eine Version von $nn$ erzeugen, die Parameter benutzt, durch welche $E$ kleiner wird, also besser wird.
+Die Idee ist, dass E nach den (allen) Parametern abgeleitet werden muss. Die Bedeutung der Ableitung ist gross: Sie sagt, wie sich ganz E verändert, wenn die Parameter angepasst werden. Addiert man die Ableitung zum Parameter, dann wird E grösser, deshalb addiert man die negative Ableitung, was E verkleinert. Ein Beispiel: 
+		$$f(x) = -3x + 42, \frac{df}{dx} = -3$$
+Setzt man x auf 15, dann ist $f(15) = -3$. Addiert man $f'(x) zu x$, so wird x zu 12, und $f(12) = 6$, also grösser als -3.
+Jedes Gewicht kann dann mit seiner partiellen Ableitung verbessert werden:
+	$$w^k_{ij} = w^k_{ij} -  \alpha \frac{dE}{dw^k_{ij}}$$
+Das ist die Update-Regel des Gewichts, welches die (k-1)-te Schicht mit der k-ten Schicht verbindet, nämlich von Knoten i in der vorherigen zu Knoten j in der k-ten Schicht (siehe Diagramm MLP). Das $\alpha$ oben ist ein arbiträrer Wert, der später als Lernrate bezeichnet wird. Meistens ist dies ein Wert in $]0,1]$ und erlaubt ein verfeinertes Anpassen der Parameter.
+Der schwierigste Teil von Backpropagation ist jedoch das Ausrechnen der Ableitung selbst, weil die Netzstrukturen von $nn$ sehr kompliziert werden können. Im Fall eines MLPs lässt sich dies relativ einfach nachvollziehen.
+\begin{figure}[hbt]
+\centering
+\includegraphics[scale=0.75]{figurebackprop}
+\caption{ Ein MLP mit angeschriebenen Gewichten\cite{drawio}}
+\end{figure}
+
+Die Ableitung dE/dwkij lässt sich aufspalten zu: 
+		$$\frac{dE}{da^k_j} \frac{da^k_j}{dw^k_{ij}}$$
+$a^k_j$  ist dabei die Summe aller Inputs zum Knoten j in der k-ten Schicht bevor die Aktivierungsfunktion $act$ wie Sigmoid oder ReLU angewendet wird. 
+$\frac{da^k_j}{dw^k_{ij}}$ ist nun einfach zu lösen: $a^k_j = \sum_{I=0}^{n}(w^k_Ij o_I)$; $o_I$ ist die Ausgabe vom I-ten Knoten in der vorherigen Schicht. Weil man nach einem bestimmten $w^k_{ij}$ ableitet, fallen alle ausser folgender Summand weg: $w^k_{ij} o_i $;d.h. wenn $I = i$. Somit ist die Ableitung von $\frac{da^k_j}{dw^k_{ij}} = o_i$.
+$\frac{dE}{da^k_j}$ ist mühsamer, denn $a^k_j$ kann in jeder Schicht sein. Wüsste man jedoch $\frac{dE}{da^{k+1}_l}$ , dann hätte man $\sum(\frac{dE}{da^{k+1}_j}\frac{ a^{k+1}_l}{a^k_j})$; $a^{k+1}_l/a^k_j$ ergibt $w^{k+1}act'(a^k_j)$.
+Dadurch wird die Ableitung nach $a^k_j$ abhängig von allen $a^{k+1}_l$ aus der nachfolgenden Schicht gemacht. Wichtig ist, dass $\frac{dE}{da^{last}}$ , die Knoteninputs zur letzten Schicht, berechnet werden können, was der Fall ist: 
+		$\frac{dE}{da^{last}} = 2(o^{last}-y) act'(a^{last})$ für alle $a^{last}$ in der letzten Schicht (mit entsprechendem Index). 
+Zusammengesetzt ergibt das: 
+	$$\frac{dE}{dw^k_{ij}} = act'(a^k_j) o^{k-1}_i \sum( w^{k+1}_{jl}  \frac{dE}{da^{k+1}_l} )$$
+mit  $\frac{dE}{da^k_j} =  w^{k+1} act'(a^k_j)$ für die vorherige Schicht.
+Nun werden die Schichten von hinten nach vorne durchlaufen, damit die notwendigen $\frac{dE}{da^{k+1}_l}$  fortlaufend berechnet werden können.
+Dank der Backpropagation ist es möglich, ein Neuronales Netz zu jeder loss-Funktion zu optimieren - bis zu einem gewissen Grad natürlich.
+\newpage
+
+\section{Theorie Teil 2: Deep Reinforcement Learning}
+
+Ein herkömmliches Neuronales Netz, wie zum Beispiel ein CNN, reicht noch nicht aus, um eine KI zu erstellen, die in der Umgebung eines Spiels richtige Entscheidungen treffen kann. Weshalb? Die Netze, die bisher besprochen wurden, gehören zum Teilgebiet des \textit{Supervised Learning} (etwa: Überwachtes Lernen). Bei diesem Konzept verfügt man immer über DatenSETS, welche in der Form ( Trainigsdaten, Korrekte Antwort ) verfügbar sind. Will man ein CNN dazu bringen, Bilder zu einer bestimmeten Klasse zuzuordnen, so benötigt man Datensets der Art ( Bild, Klasse ). Glücklicherweise existieren Datenbanken zu diesem Zweck, zum Beispiel das ImageNet\cite{imgnet}. Wichtig ist, dass man erkennt, dass diese Datensets durch Menschenhand erstellt wurden. Grundsätzlich liesse sich dies auch für Spiele machen: Im Fall von Schach könnte man ein Expertenteam von Profischachspielern anstellen, die Unmengen von Stellungen durchgehen würden, um bei jeder ensteiden würden, was am Besten zu spielen sei; Auch könnte ein herkömmliches Schachprogramm diese Aufgabe übernehmen. Die Sache hat jedoch einen Haken: Ein Neuronales Netz wird immer versuchen, die Vorgabe, so gut wie es möglich ist, nachzuahmen. Deshalb kann es niemals besser als die Lösung werden. Ausserdem hat Niemand bewiesen, dass die Angaben der Profispieler oder des Schachprogramms mit Sicherheit korrekt wären  (angesichts der Tatsache, dass AlphaZero besser als Stockfish spielt\cite{alphazero}, muss man das wohl annehmen). Aus diesem Gründen wird klar, dass klassisches Supervised Learning nur beschränkten Erfolg als Spiele-KI haben kann. Wäre es denn möglich, die KI zu bauen, die nicht solche Lösungen oder Labels benötigt?\\
+Genau mit dieser Frage beschäftigt sich (Deep) Reinforcement Learning. Im Folgenden werden einige Methoden und Konzepte aus diesem Bereich behandelt.
+
+\subsection{Markov Desicion Process (MDP)}
+
+Um besser verstehen zu können, welche Eigenschaften eine Spiele-KI haben muss, führt man ein mathematisch formales Konzept ein, welches die Grundeigenschaften eines Spiels verkörpert. Damit sind einfache Tatsachen gemeint, wie zum Beispiel dass das Spiel in eine neue Stellung übergeht, nachdem der Spieler einen Zug ausgeführt hat. Man nennt das System einen Markov Desicion Process, benannt nach dem russischen Mathematiker Andrej Markov, der es formuliert hat\cite{mdpwiki}.
+\begin{figure}[hbt]
+\centering
+\includegraphics[scale=0.5]{figuremdp}
+\caption{Diagramm zu MDP\cite{figuremdp}}
+\end{figure}
+
+Die Beziehung zwischen diesen Variablen und Funktionen ist im obigen Bild dargestellt: Es gibt einen \textit{agent}, der Spieler/der Handelnde, und das Environment, die Umgebung, bei uns das Spiel. Das MDP ist ein zeitlicher Ablauf: Es startet mit einer bestimmten Start-Stellung und durchläuft dann Zeitschritte (entweder unendlich lang oder endet beim Erreichen einer bestimmten End-Stellung). Bei jedem Zeitschritt erhält der Agent vom Environment die neue Stellung s und die Belohnung r betreffend den vorherigen Zeitschritt (und evtl. die verfügbaren Aktionen aus A), er wählt ein a aus, schickt es zurück ans Environment und nun beginnt der nächste Zeitschritt...
+Man definiert:
+\begin{description}
+\item{S und s; wobei S für die Menge aller möglichen Stellungen steht, und s für ein Element aus dieser Menge}
+\item{$A(s)$ und a; wobei A(s) die Menge aller in einer Stellung erlaubten oder möglichen Aktionen (= Züge) steht und wiederum a als Element aus A(s)}
+\item{$T(s, a) -> s'$; eine Funktion, die ein s' berechnet abhängig der Stellung s und der Aktion a, die sie erhalten hat - es sei angemerkt, dass es sich dabei um eine Verteilung handelt, s und a bestimmen lediglich, welches s' wahrscheinlicher ist}
+\item{$R(s, a) -> r$; eine Funktion, die eine Belohnung r für das a berechnet, das in s genommen wurde - kann ebenfalls aus einer Verteilung stammen}
+\end{description}
+Das Ziel ist es nun, den Agenten so steuern, dass $r$ über das gesamte Spiel hinweg gesehen maximal ist. 
+
+\subsection{Q-Learning}
+
+Der totale noch erreichbare \textit{reward} aus einer Position s ist definiert als G:
+$$G(s) = \sum_{t}^{t_{end}} y^t r_t $$
+Es wird also einfach jegliche Belohnung zusammengezählt, die im weiteren Spielverlauf noch dazukommt. $y$ ist dabei ein Faktor, der im Bereich $[0,1]$ liegt und Belohnungen, die noch in weiter Ferne liegen, abschwächt. Der Grund zu seiner Existenz liegt in ein paar mathematischen Annehmlichkeiten\cite[siehe][Value Function]{lilblog}.
+Nun stellt man sich eine Funktion vor, die den \textit{expected future reward} in Abhängigkeit vom momentanen Spielstand und einer möglichen Aktion weiss:
+$$Q(s,a) = Erwartungswert( G(s) | s,a )$$
+Die Funktion erhält den Buchstaben Q, was evtl. für \textit{Quality} steht. $Q(s,a)$ ist praktisch: Weiss man sie, so kann man direkt ein sinnvolles Verhalten für den agent ableiten: Man kann alle möglichen Züge nach ihrem Q-Wert abfragen und schliesslich denjenigen mit dem höchsten auswählen. Das ist als \textit{greedy-policy} bekannt.
+Es ist nur selten möglich, eine Q-Funktion einfach so zu besitzen. Meistens muss sie approximiert werden. Dazu hilft die Bellman-Gleichung, die die Rekursivität der Q-Funktion deutlich macht.
+$$Q(s,a) = Erwartung(r_t + y \cdot Q(s_{t+1},a_{t+1}) | s,a )$$
+Die Summe aus G wird vereinfacht, indem alle ausser der erste Summand durch $y \cdot Q(s_{t+1},a_{t+1})$ zusammengefasst wird. $s_{t+1}$ ist dabei einer der Schwachpunkte. Die Funktion $T(s,a)$ ist probabilistisch - $s_{t+1}$ kann nicht mit aller Sicherheit bestimmt werden. Jedoch genau deshalb ist die Q-Funktion ein Erwartungswert: Mit bestimmten Wahrscheinlichkeiten gelangt man in eine Position $s_{t+1}$. Jedes s trägt aber implizit einen Wert mit sich, nämlich der der besten Aktion in $s_{t+1}$. Der implizite Wert eines jeden s ist dadurch:
+$$ s =  \sum_{alle s_t+1} max( Q(s_{t+1},a) ) P(s_{t+1} | s,a)$$
+Jetzt will man wissen, wie man seine Q-Funktion verbessert. Bellman liefert dazu:
+$$Q^*(s,a) = Erwartung(r_t + y \cdot max(Q^*(s_{t+1},a_{t+1}) | s,a )) )$$
+Im Fall der perfekten Q-Funktion muss diese Gleichung für alle s und a erfüllt sein.
+
+\subsection{Tabulares Q-Learning (=tQL)}
+
+Die Q-Funktion wird in tQL als 2d-Liste/Tabelle repräsentiert, wo s und a die Achsen sind.
+Trainingsdaten werden durch Spiel-gegen-sich-selbst (self-play) erzeugt. Das heisst, dass ein Spiel simuliert wird, bei dem immer die momentane Q-Liste nach dem besten Zug abgefragt wird, bis das Spiel zuende geht. Bei jedem Zeitschritt werden s, a, r und s' in eine Liste abgespeichert. Das sind alle nötigen Informationen, um ein Update in der Q-Tabelle durchführen zu können:
+$$Q[s][a] = Q[s][a] (1-\alpha) +\alpha( r + y \cdot max( Q[s'] ) ) $$
+$\alpha$ ist die Lernrate; Dadurch wird der der neue Eintrag von $Q[s][a]$ aus Anteilen aus dem alten und aus dem neuen Wert zusammengesetzt, die von alpha gewichtet werden.
+Meistens werden Updates nicht sofort ausgeführt, sondern zu einem späteren Zeitpunkt. Die [s,a,r,s']-Listen werden in einen Speicher aufgenommen, der vor der Trainingsphase zufällig vermischt wird. Das führt zu einer Art experience replay.\cite{lilblog}
+TQL hat allerdings grosse Schwächen: Q könnte je nach Problemstellung fast unendlich gross werden:
+Wenn s Teile enthält, die kontinuierlich sind, d.h. ein Wert ist eine Zahl aus $\mathbb{R}$, ist es hoffnungslos, eine Liste aller Möglichkeiten zu führen.
+
+\subsection{Deep Q-Learning}
+Bei Deep Q-Learning(=DQN) errinnert man sich an die Tatsache, das die Q-Funktion, die bei tQL als Tabelle im Hintergrund geführt wird, auch Funktion angesehen werden kann, die durch ein neuronales Netz approximiert wird.
+	$$DQN(s,a,phi) -> r$$
+wobei phi für alle Parameter des Netzes steht.
+Vorteile sind sofort ersichtlich:
+\begin{itemize}
+\item{DQN kann auf einem kontinuierlichen state-space angewendet werden.}
+\item{DQN kann states bewerten, die zuvor noch nie durch Spiel-gegen-sich-selbst erreicht wurden.}
+\item{Der Speicherverbrauch bleibt konstant.}
+\end{itemize}
+Die Gewinnung der Trainigsdaten verläuft gleich wie bei tQL: [s,a,r,s']-Listen werden abgespeichert. Die Optimierung des Netzes wird durch folgende loss-Funktion vorgenommen:
+	$$loss = (DQN(s,a) - (r + y \cdot max(DQN(sn))))^2$$
+Es handelt sich dabei um einen MSE-loss zwischen $DQN(s,a)$ und $(r + y \cdot max(DQN(sn)))$. Dadurch wird die Differenz der beiden Terme minimiert, so dass das NN sich immer näher an die Bellman-Gleichung annähert.
+
+\newpage
+\section{Methoden}
+\subsection{Tic-Tac-Toe}
+Es folgt ein Einblick in das TTT-Programm, welches zum Spielen und Trainieren notwendig war. 
+Die Basis liegt in einem 2D numpy-array, welches direkt das Spielfeld repräsentiert. Alle Felder werden mit -1 initalisiert. Zieht der erste Spieler, dann wird am entsprechenden Ort eine 0 gesetzt, für den zweiten eine 1.
+Nach jedem Zug eines Spielers muss überprüft werden, ob das Spiel geendet hat. Bei Spielende wird der Sieger bestimmt. Letzteres ist einfach, denn ein Zug kann nur gewinnen oder Unentschieden herbeiführen, aber nicht verlieren. Ein Remis kann nur entstehen, wenn das ganze Brett gefüllt worden ist, aber keiner der beiden Spieler gewonnen hat.
+Weil das TTT-Programm erweiterbar sein soll, d.h. auch ein grösseres Spielfeld verarbeiten können soll, ist es nicht ganz offensichtlich, wie man überprüft, ob das Spiel geendet hat. Zum Beispiel könnte die Regel sein auf einem 10x10 Spielfeld nach fünf hintereinanderfolgenden $x$ suchen.
+Um auf einem nxm Feld nach k hintereinanderfolgenden gleichen Zeichen zu suchen, musste ein einfacher Algorithmus entworfen werden, der nach jedem Zug überprüft, ob das Spiel geendet hat. 
+Es wird ausgenutzt, dass im Falle eines Siegs der letzte Zug entscheidend war, d.h. dass das zuletzt gesetzte Feld Teil der mindestens k-langen Linie ist. Deshalb geht der Algorithmus vom Feld des letzten Zugs aus und sucht sternförmig nach allen acht Richtungen nach Feldern, die gleich ausgefüllt sind wie das Anfangsfeld. Schlussendlich muss beachtet werden, dass die sich gegenüberstehenden Richungen (z.B. links oben und rechts unten) in ihrer Länge zusammengezählt werden müssen.
+\begin{singlespace}
+\begin{lstlisting}[language=Python,caption={Code, der nach Lösungen in der Horizontale sucht},captionpos=b]
+	Code:
+        foundinlineX = 1        
+        origin = pos[:] # position vom letzten zug
+        while pos[0] != 0:
+            pos[0] -= 1
+            if self.field[pos[0],pos[1]] == who:
+                foundinlineX += 1
+            else:
+                break
+            if foundinlineX == self.numtowin:
+                return True
+        pos = origin[:]
+        while pos[0] < self.field.shape[0]-1:
+            pos[0] += 1
+            if self.field[pos[0],pos[1]] == who:
+                foundinlineX += 1
+            else:
+                break
+            if foundinlineX == self.numtowin:
+                return True
+
+\end{lstlisting}
+\end{singlespace}
+
+
+\subsection{Tabulares Q-Learning}
+Für die Tabelle habe ich ein Python Standard-dictionary benutzt. Keys sind jeweils die string-Repräsentationen der entsprechenden Positionen aus dem TTT-Programm. Values sind jeweils ein numpy-array mit so vielen Einträgen, wie es actions gibt, also nxm. Sie sind auf null initalisiert.\\
+Die Replay-Liste wird nun angelegt, indem effektiv eine arbiträtre Anzahl Spiele durchlaufen wird. Mit der Q-Tabelle werden für beide Seiten die Züge gespielt, denen der höchste Wert zugeordnet ist; jedoch muss mit einer bestimmen Wahrscheinlichkeit (in meinen Trainingsläufen meistens im Bereich 50-60\%) ein zufälliger Zug ausgeführt werden, weil sonst immer das gleiche Spiel gespielt würde, und das würde zu Nichts führen.
+Ebenfalls wichtig ist, dass nur legale Züge durchgelassen werden. Dies kann der Q-Learning-Algorithmus nicht selbst übernehmen, sondern muss extern gemacht werden.
+\begin{singlespace}
+\begin{lstlisting}[language=Python,caption={Abfrage-Funktion},captionpos=b]
+    def query(self,state): 
+        if str(state) not in self.Q:
+            self.Q[str(state)] = np.zeros(self.sz)
+        if random.uniform(0,1) < self.random_prob:
+            return np.random.choice(TTTGame.get_legal(state))
+
+        res = self.Q[str(state)]
+        besta = -1
+        bestr = -1000
+        for lglidx in TTTGame.get_legal(state):
+            if res[lglidx] > bestr:
+                bestr = res[lglidx]
+                besta = lglidx
+        return besta
+\end{lstlisting}
+\end{singlespace}
+
+
+Die Replays werden zufällig vermischt und anschliessend zum Training benutzt. Meistens werden zwischen 1000 bis 5000 Replays gespielt und trainiert. Bei tQL gestaltet sich das Verbessern relativ einfach:
+\begin{singlespace}
+\begin{lstlisting}[language=Python,caption={Trainingsfunktion},captionpos=b]
+    def train(self):
+       for replay in self.replay_save:
+            s,a,r,sn = replay
+            self.Q[str(s)][a] = self.Q[str(s)][a] * \
+             (1 - self.lr) + self.lr * (r + self.decay * \
+              self.choose_from_legal(sn,self.Q[str(sn)]))
+             
+\end{lstlisting}
+\end{singlespace}
+
+
+\subsection{Deep Q-Learning}
+
+Für DQN werden viele der oben genannten Konzepte und effektiv Funktionen über-nommen. Die Q-Tabelle wird durch ein Neuronales Netzwerk ersetzt, welches mit TF.keras implementiert ist.
+\begin{singlespace}
+\begin{lstlisting}[language=Python,caption={Beispiel für das Erstellen eines Netzwerks mit zwei dense(aka normalen)-Schichten},captionpos=b]
+net = tfk.models.Sequential()
+net.add(tfk.layers.Dense(50,input_shape=(9*3)),
+		activation=tfk.activations.relu))
+net.add(tfk.layers.Dense(9))
+net.compile(optimizer=tfk.optimizers.SGD(lr=0.1),
+        loss=tfk.losses.MSE,
+        metrics=[tfk.metrics.MAE])
+\end{lstlisting}
+\end{singlespace}
+
+Mit den Methoden net.predict und net.fit lässt sich das Netz abfragen bzw. trainieren. Gleich wie beim Tabellenansatz muss die Ausgabe des Netzwerks mit einer Maske der noch möglichen Züge verglichen werden. Die train-Funktion ändert am Stärksten, weil die [s,a,r,s']-Listen für die net.fit-Funktion aufbereitet werden müssen.\\
+DQN hat einen Input, der dreimal so gross ist wie das das TTT-Feld. Das liegt an verwendeten one-hot encoding. Dabei wird die TTT-Position mit z.B. 3x3 Feldern, die jeweils einen Wert von -1,0 oder 1 besitzen, so umgeschrieben, dass jedes Feld mit einem Vektor der Länge 3 ersetzt wird. Diese Vektoren enthalten nur 0 und genau eine 1. Der Index, bei dem die 1 steht, hat dann die ursprüngliche Bedeutung. So steht der Index 0 für -1, 1 für 0 und 2 für 1.
+
+\begin{lstlisting}
+[[-1,-1,0],
+[-1,0,1],
+[1,0,-1]]
+wird zu:
+[1,0,0],
+[1,0,0],
+[0,1,0],
+....
+[0,0,1],
+[0,1,0],
+[1,0,0]
+\end{lstlisting}
+
+One-hot encoding ergibt Sinn im Fall von TTT, weil die Bedeutung der Werte -1,0,1 für leer, Spieler0, Spieler1 gewissermassen nicht kontinuierlich/linear ist. Wäre es so, würde das heissen, dass ein grösserer Input für eine proportional grössere Bedeutung steht. Aber ein Wert von 12 hat keine Bedeutung in TTT.
+Ein NN will aber, dass der Input eine lineare Bedeutung hat. Das liegt hauptsächlich daran, dass das Netzwerk intern die Werte nur multipliziert und addiert (insbesondere wenn ReLU benutzt wird).
+Bei one-hot encoding erschafft man deshalb eine Dimension für jeden diskreten Wert.\\
+
+Der Code ist auf Github unter https://github.com/ldzgch/TTTlearning verfügbar.
+
+\newpage
+
+\section{Resultate}
+
+tQL ist sehr erfolgreich nach genügend langer Trainingszeit: Fast immer kann die KI ein Unentschieden forcieren. Mache ich als Spieler einen Fehler, so kann sie diesen zum Gewinn ausnutzen. Jedoch ist es immer möglich, dass ein paar Stellungen existieren, die während der Trainingsphase zu wenig oft besucht wurden und folglich fehlerhaft bewertet werden. Abschliessende Sicherheit zu erlangen ist deshalb schwierig. 
+\par
+Auch DQN hat wenig Probleme, TTT zu lernen. Ein einfaches Dense-layer network mit ReLU-Aktivierungsfunktionen und folgenden Schichtgrössen:
+	$$27 -> 100 -> 100 -> 100 -> 9 | \textrm{ inklusive Input und Output}$$
+genügt, um gleiche Performance wie tQL zu erreichen.
+\begin{figure}[hbt]
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\linewidth]{tQL-learning}
+\caption{tQL}
+\end{subfigure}\hfill
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\linewidth]{dqn-learning}
+\caption{DQN}
+\end{subfigure}
+\caption{Gewinnchancen von tQL bzw. DQN während der Trainingsphase\\
+x-Achse: Anzahl trainierte Beispiele\\
+y-Achse: Gewinnchance als Wert zwischen 0 und 1}
+\label{fig:res}
+\end{figure}
+
+In Abbildung \ref{fig:res} sind die Leistungen beiden Programme in der Trainingsphase während den ersten 20'000 Beispielen zu sehen. Der Gegner hat jeweils 100\% zufällig gespielt. Wenn die Anzahl Trainingsbeispiele von Huntertausenden zu Millionen übergeht, erreichen die Programme annäherungsweise menschliche Leistung.
+
+
+
+\subsection{Vergrösserung auf 4x4}
+4x4 hat viel mehr Stellungen. Nicht im Sinne eines kontinuierlichen state-space, sondern in der Anzahl von diskret verschiedenen Stellungen. Q-Learning hat mit der Vergrösserung des Feldes enorm Mühe. Eine sehr grobe Abschätzung der Anzahl Stellungen: 
+$$3x3: 3^9 $$
+$$4x4 : 3^{16} $$
+Das bedeutet eine Vergrösserung um den Faktor 2187. Natürlich wird diese Zahl abgeschwächt durch die Natur der Regeln von TTT, jedoch reicht diese Zahl aus, um erklären zu können, das ein Algorithmus wie Q-Learning, der stark vom wiederholten Durchlauf verschiedener Spielverläufe abhängig ist, nicht grossen Erfolg erzielt. tQL ist sehr stark davon betroffen: Ich habe mein Programm einige Zeit trainieren lassen, so dass total im Bereich von 15 Millionen Beispielen trainiert wurden und die Spielstärke bleibt ziemlich eingeschränkt. Ein menschlicher Spieler, der sich einigermassen konzentriert, spielt besser. Daneben wird das Q-Dictionary wie erwartet riesig gross. Das Training habe ich nach einer gewissen Zeit abgebrochen; Die Anzahl der erfassten Positionen war in diesem Moment bei zirka 1.7 Millionen (bereit viel mehr als die 5478\cite{numttt} vom Standard-TTT) und numpy.save erzeugt ein save-file von etwa 476 MB. 
+Deep Q-Learning mit einem einfachen MLP/Dense-Layer-Netzwerk ist bereits um Längen besser, wie aus meinen Versuchen hervorgeht. Jedoch ist es immer noch schwach.
+Es ist zu vermuten, dass Q-Learning nicht der optimale Lösungsansatz für Tic-Tac-Toe ist, weil TTT von Natur aus viele Stellungen besitzt. Das Problem von Q-Learning ist, dass alle möglichen Positionen mehrmals durchlaufen werden müssen und dass dabei verschiedene Züge gespielt werden. Daraus schliesse ich, dass Q-Learning besser für Problemstellungen gedacht ist, die wenige states enthalten, mit einer Anzahl von s im Bereich von 100 bis 1000.
+
+\subsection{Verbesserungvorschläge}
+
+Weil die Performance der Programme auf 4x4 so schlecht ist, sollen hier ein paar Ideen genannt werden, die  vielversprechend klingen. Wäre noch mehr Zeit übrig geblieben (z.B. zwei Monate), so hätten sie durchaus getestet
+werden können.\\
+Es soll noch einmal klargestellt werden: In dieser Arbeit wurden die Gebiete \textit{deep learning} und \textit{reinforcement learning} nur oberflächlich, d.h. in ihren Grundkonzepten, behandelt. Jedoch sind während der Recheche zu beiden Gebieten interessante Techniken gefunden worden, von welchen einige hier genannt werden sollen:
+\begin{itemize}
+\item{\textit{deep learning}\\
+	Das neuronale Netzwerk könnte kompliziertere Architekturen bessere Resulate erzielen:
+	\begin{itemize}
+	\item{Mit der Vewendung von Convolutional-Schichten\cite{video5}, RNN-Schichten\cite{video10} oder ResNets\cite{video9}}
+	\item{Mit der Verwendung anderer Aktivierungsfuktionen wie leaky ReLU oder Tangens\cite{video6}}
+	\end{itemize}
+}
+\item{\textit{reinforcement learning}\\
+	Q-Learning ist nicht die einzige Methode, weitere Konzepte sind:
+	\begin{itemize}
+	\item{Policy Gradient\cite{lilblog}}
+	\item{REINFORCE-Algorithmus\cite{lilblog}}
+	\item{Sinngemässe Replizierung von AlphaZero\cite{alphapaper} für TTT}
+	\end{itemize}
+}
+\end{itemize}
+
+
+\section{Fazit}
+Wenn ich die Projektvereinbarung durchsehe, die ich vor dreivierteljahren abgegeben habe und mit dem vergleiche, was ich tatsächlich als Programm umsetzen konnte, so ist klar, dass ich mir damals zu viel vorgenommen habe. 
+Damals hatte ich die Idee, nach erfolgreichem Bezwingen von Tic-Tac-Toe mit Schach weiterzufahren. Es hat sich aber gezeigt, dass deep learning zuweilen eine mühsame Angelegenheit sein kann, wenn das Programm eben nicht funktioniert. In solch einer Situation fragt man sich, wo der Fehler liegt; Diesen zu finden ist allerdings schwieriger als bei einem normalen Algorithmus, weil das Verhalten meines Programms teilweise nur indirekt von meinem Code abhängt - das Programm lernt ja.
+\\
+Trotzdem hat mir die Arbeit an diesem Projekt Spass gemacht. Das liegt zum Einen daran, dass verschiedene Phasen zum Teil recht abenteuerlich ausgefallen sind: Zu Anfang, also vor gut einem Jahr wusste ich noch sehr wenig über Neuronale Netzwerke und es war nicht klar, wie viel ich erreichen würde und was für einen Kantonsschüler in diesem Bereich überhaupt möglich ist. \\
+Das Suchen und Verstehen von Informationen war ebenfalls eine Herausforderung. Dass mit Ausnahme des Buches\cite{pinkbook}, welches ich vor Beginn mit meiner Arbeit gelesen habe, fast alle Informationen im Internet in Englisch geschrieben sind, hat mich weniger gestört. Schwieriger war es, dass benötigte mathematische Verständnis hervorzubringen. Oft musste ich eine Textstelle mehrmals lesen oder an mehreren Tagen wieder anschauen, bis ich den Sinn einer Methode oder Formel begriffen habe.\\
+Spannend war deshalb auch meine Selbstverantwortlichkeit für das Verständnis des Themas. Nur ich alleine kann helfen, mich vom Unverständnis zu befreien. 
+\\
+Selbstverständlich habe ich viel Neues im Bereich des \textit{machine learning} gelernt. Zuweilen dachte ich verärgert, wehalb ich mich selbst genau in diese Ecke des Deep Reinforcement Learning stecken musste, als ich mich für mein Projekt entschieden habe; Viele spannende Phänomene wie Neural Style Transfer oder Deep Dream sind mir während der Arbeitsphase begegnet.Ich kann mir gut vorstellen, in Zukunft weitere \textit{deep learning}-basierte KI zu programmieren - ganz einfach, weil es spannend ist.\par
+Ich hoffe, dass ich im Leser Interesse für neuronale Netze wecken konnte - Das meinige ist mit Sicherheit vorhanden.
+
+\newpage
+\printbibliography
+
+\end{document}
